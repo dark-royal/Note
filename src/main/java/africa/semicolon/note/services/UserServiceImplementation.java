@@ -25,31 +25,39 @@ public class UserServiceImplementation implements UserService{
     private final PasswordEncoder passwordEncoder;
 
     private final ModelMapper modelMapper;
+    private final EmailService emailService;
     private final VerificationServiceImplementation verificationTokenService;
 
-    public UserServiceImplementation(PasswordEncoder passwordEncoder, ModelMapper modelMapper, VerificationServiceImplementation verificationTokenService) {
+
+    public UserServiceImplementation(PasswordEncoder passwordEncoder, ModelMapper modelMapper, EmailService emailService, VerificationServiceImplementation verificationTokenService) {
         this.passwordEncoder = passwordEncoder;
         this.modelMapper = modelMapper;
+        this.emailService = emailService;
         this.verificationTokenService = verificationTokenService;
     }
 
     @Override
     public RegisterResponse createAccount(RegisterRequest registerRequest) throws UserExistAlreadyException {
+        validateRegistration(registerRequest.getEmail());
         User user = modelMapper.map(registerRequest,User.class);
-        passwordEncoder.encode(registerRequest.getPassword());
+        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setEnable(false);
 
-        Optional<User> saved = Optional.of(user);
-        saved.ifPresent( u ->{
-            try{
-                String token = UUID.randomUUID().toString();
-                verificationTokenService.save(saved.get(),token);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        });
+        userRepository.save(user);
 
-        user = userRepository.save(user);
+
+        Optional<User> saved = Optional.of(user);
+//        saved.ifPresent( u ->{
+//            try{
+//                String token = UUID.randomUUID().toString();
+//                verificationTokenService.save(saved.get(),token);
+//                emailService.sendHtmlMail(u);
+//            }catch (Exception e){
+//                    throw new RuntimeException(e.getMessage());
+//            }
+//        });
+
+//        user = userRepository.save(user);
         var response = modelMapper.map(user,RegisterResponse.class);
         response.setMessage("Registration successfully");
         return response;
@@ -60,4 +68,13 @@ public class UserServiceImplementation implements UserService{
     public LoginResponse login(LoginRequest loginRequest) {
         return null;
     }
+
+
+
+    private void validateRegistration(String email) throws UserExistAlreadyException {
+        User user = userRepository.findByEmail(email);
+        if(user != null){
+            throw new UserExistAlreadyException(String.format("%s exists already, enter another email address",email));
+        }
+ }
 }

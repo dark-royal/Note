@@ -11,4 +11,5 @@ public interface UserService {
     RegisterResponse createAccount(RegisterRequest registerRequest) throws UserExistAlreadyException;
 
     LoginResponse login(LoginRequest loginRequest);
+
 }

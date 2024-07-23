@@ -2,14 +2,15 @@ package africa.semicolon.note.services;
 
 import africa.semicolon.note.data.models.User;
 import africa.semicolon.note.data.models.VerificationToken;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import jakarta.mail.internet.MimeMessage;
 
-import javax.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {
@@ -23,7 +24,7 @@ public class EmailService {
         this.javaMailSender = javaMailSender;
         this.verificationServiceImplementation = verificationServiceImplementation;
     }
-   public void sendHtmlMail(User user) throws MessagingException{
+   public void sendHtmlMail(User user) throws MessagingException {
        VerificationToken verificationToken = verificationServiceImplementation.findByUser(user);
        if(verificationToken != null){
            String token = verificationToken.getToken();
